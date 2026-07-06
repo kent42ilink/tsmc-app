@@ -24,13 +24,12 @@ body{
   box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
-/* 標題 */
 h2{
   font-size:22px;
   margin:0 0 10px 0;
 }
 
-/* 上方按鈕 */
+/* 按鈕區 */
 .bar{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -71,7 +70,7 @@ button:hover{
 /* 選中效果 */
 .opt.selected{
   background:#4caf50 !important;
-  color:#fff;
+  color:white;
 }
 
 /* 狀態 */
@@ -80,17 +79,21 @@ button:hover{
   font-weight:bold;
 }
 
-/* modal */
+/* =========================
+   MODAL（修正置中版）
+========================= */
 .modal{
   display:none;
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.6);
+
   justify-content:center;
   align-items:center;
+
+  height:100vh; /* ⭐關鍵修正 */
 }
 
-/* 彈窗內容 */
 .box{
   width:92%;
   max-width:420px;
@@ -99,9 +102,15 @@ button:hover{
   border-radius:14px;
   max-height:70vh;
   overflow:auto;
+
+  animation:pop .15s ease;
 }
 
-/* header */
+@keyframes pop{
+  from{transform:scale(0.9); opacity:0;}
+  to{transform:scale(1); opacity:1;}
+}
+
 .head{
   display:flex;
   justify-content:space-between;
@@ -130,7 +139,9 @@ button:hover{
 
 </div>
 
-<!-- modal -->
+<!-- =========================
+     MODAL
+========================= -->
 <div class="modal" id="modal" onclick="bgClose(event)">
   <div class="box" onclick="event.stopPropagation()">
 
@@ -186,7 +197,7 @@ function saveWrong(q,a){
 ====================== */
 function next(){
 
-  clearSelect();
+  clearSelect(); // ⭐ 每題必清
 
   cur = vocab[Math.floor(Math.random()*vocab.length)];
 
@@ -236,7 +247,7 @@ function check(btn,o){
 }
 
 /* ======================
-   🔄 模式（完整顯示）
+   🔄 模式
 ====================== */
 function toggleMode(){
   mode = mode==="en2zh"?"zh2en":"en2zh";
@@ -248,11 +259,13 @@ function toggleMode(){
 }
 
 /* ======================
-   🧹 清除選擇
+   🧹 清除選擇（真正有用）
 ====================== */
 function clearSelect(){
   document.querySelectorAll(".opt")
     .forEach(b=>b.classList.remove("selected"));
+
+  document.getElementById("status").innerText="";
 }
 
 /* ======================
