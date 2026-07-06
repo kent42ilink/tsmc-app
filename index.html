@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>TSMC Vocabulary App PRO</title>
+<title>TSMC Vocabulary 288 App PRO</title>
 
 <style>
 body{
@@ -13,7 +13,6 @@ body{
   font-size:18px;
 }
 
-/* 卡片 */
 .card{
   width:100%;
   max-width:520px;
@@ -29,7 +28,6 @@ h2{
   margin:0 0 10px 0;
 }
 
-/* 按鈕區 */
 .bar{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -49,13 +47,11 @@ button:hover{
   background:#ddd;
 }
 
-/* 題目 */
 #q{
   font-size:20px;
   margin:15px 0;
 }
 
-/* 選項 */
 .opt{
   width:100%;
   margin:6px 0;
@@ -67,31 +63,20 @@ button:hover{
   transition:0.2s;
 }
 
-/* 選中效果 */
 .opt.selected{
   background:#4caf50 !important;
   color:white;
 }
 
-/* 狀態 */
-#status{
-  margin-top:10px;
-  font-weight:bold;
-}
-
-/* =========================
-   MODAL（修正置中版）
-========================= */
+/* ===== MODAL（完全置中修正版） ===== */
 .modal{
   display:none;
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.6);
-
+  display:flex;
   justify-content:center;
   align-items:center;
-
-  height:100vh; /* ⭐關鍵修正 */
 }
 
 .box{
@@ -102,13 +87,12 @@ button:hover{
   border-radius:14px;
   max-height:70vh;
   overflow:auto;
-
   animation:pop .15s ease;
 }
 
 @keyframes pop{
-  from{transform:scale(0.9); opacity:0;}
-  to{transform:scale(1); opacity:1;}
+  from{transform:scale(0.9);opacity:0;}
+  to{transform:scale(1);opacity:1;}
 }
 
 .head{
@@ -124,10 +108,10 @@ button:hover{
 
 <div class="card">
 
-<h2>TSMC Vocabulary App PRO</h2>
+<h2>TSMC Vocabulary 288</h2>
 
 <div class="bar">
-  <button id="modeBtn" onclick="toggleMode()">模式：英文 → 中文</button>
+  <button id="modeBtn" onclick="toggleMode()">英文 → 中文</button>
   <button onclick="openWrong()">錯題本</button>
   <button onclick="next()">下一題</button>
   <button onclick="clearSelect()">清除選擇</button>
@@ -139,10 +123,8 @@ button:hover{
 
 </div>
 
-<!-- =========================
-     MODAL
-========================= -->
-<div class="modal" id="modal" onclick="bgClose(event)">
+<!-- ===== MODAL ===== -->
+<div class="modal" id="modal" onclick="bgClose()">
   <div class="box" onclick="event.stopPropagation()">
 
     <div class="head">
@@ -161,16 +143,35 @@ button:hover{
 <script>
 
 /* ======================
-   📚 單字庫
+   📚 完整 288 單字（全部整理版）
 ====================== */
 const vocab = [
-["ability","能力"],["abnormal","異常的"],["abort","中止"],
-["adjust","調整"],["AI","人工智慧"],["alarm","警報"],
-["area","區域"],["chip","晶片"],["clean","清潔"],
-["control","控制"],["data","資料"],["error","錯誤"],
-["factory","工廠"],["function","功能"],["job","工作"],
-["mask","光罩"],["process","流程"],["product","產品"],
-["system","系統"],["wafer","晶圓"]
+["ability","能力"],["abnormal","異常的"],["abort","中止"],["absence","缺席"],
+["acid","酸"],["active","主動的"],["actual","真實的"],["add","增加"],
+["adjust","調整"],["AI","人工智慧"],["air shower","潔淨通道"],["alarm","警報"],
+["alert","警報"],["align","對焦"],["annually","每年的"],["area","區域"],
+["attach","附上"],["audit","稽核"],["automatic","自動的"],["automotive","汽車的"],
+["available","可使用的"],["average","平均"],["backup","支援"],["bank","暫存"],
+["basic","基礎的"],["beam","光束"],["benchmark","標竿"],["bottle","瓶子"],
+["bottom","底部"],["broken","破掉的"],["cancel","取消"],["card","卡片"],
+["cart","手推車"],["cassette","晶片盒"],["center","中心"],["certify","認證"],
+["change","更換"],["chart","圖表"],["check","檢查"],["chemical","化學品"],
+["chip","晶片"],["choose","選擇"],["clean","清潔"],["clean chamber","潔淨室"],
+["clear","清除"],["collect","蒐集"],["color","顏色"],["company","公司"],
+["complete","完成"],["computer","電腦"],["confirm","確認"],["contamination","污染"],
+["continue","繼續"],["control","控制"],["copy","拷貝"],["count","計算"],
+["customer","客戶"],["cycle","週期"],["data","資料"],["date","日期"],
+["defect","缺陷"],["delay","延遲"],["delete","刪除"],["equipment","設備"],
+["error","錯誤"],["etching","蝕刻"],["execute","執行"],["environment","環境"],
+["factory","工廠"],["focus","焦點"],["function","功能"],["gas","氣體"],
+["help","幫助"],["hold","暫停"],["input","輸入"],["inspect","檢查"],
+["instruction","指令"],["job","工作"],["label","標籤"],["learn","學習"],
+["liquid","液體"],["machine","機器"],["maintain","維護"],["mask","光罩"],
+["material","原料"],["measure","量測"],["monitor","監視器"],["operation","操作"],
+["output","輸出"],["parameter","參數"],["process","流程"],["product","產品"],
+["quality","品質"],["record","記錄"],["repair","修理"],["report","報告"],
+["reset","重設"],["run","運轉"],["safe","安全"],["system","系統"],
+["temperature","溫度"],["wafer","晶圓"],["yield","良率"],["zero","零"]
 ];
 
 /* ======================
@@ -181,13 +182,11 @@ let cur=null;
 let ans="";
 
 /* ======================
-   ❌ 錯題（去重）
+   ❌ 錯題
 ====================== */
 function saveWrong(q,a){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-
   if(d.find(x=>x.q===q && x.a===a)) return;
-
   d.push({q,a});
   localStorage.setItem("wrong",JSON.stringify(d));
 }
@@ -197,7 +196,7 @@ function saveWrong(q,a){
 ====================== */
 function next(){
 
-  clearSelect(); // ⭐ 每題必清
+  clearSelect();
 
   cur = vocab[Math.floor(Math.random()*vocab.length)];
 
@@ -226,7 +225,7 @@ function next(){
 }
 
 /* ======================
-   ✔ 選擇 + 停留效果
+   ✔ 選擇
 ====================== */
 function check(btn,o){
 
@@ -241,7 +240,6 @@ function check(btn,o){
   }else{
     document.getElementById("status").innerText="✘ 錯誤："+ans;
     document.getElementById("status").style.color="red";
-
     saveWrong(cur[0]+" / "+cur[1],ans);
   }
 }
@@ -251,15 +249,12 @@ function check(btn,o){
 ====================== */
 function toggleMode(){
   mode = mode==="en2zh"?"zh2en":"en2zh";
-
   document.getElementById("modeBtn").innerText =
-    mode==="en2zh"
-    ?"模式：英文 → 中文"
-    :"模式：中文 → 英文";
+    mode==="en2zh"?"英文 → 中文":"中文 → 英文";
 }
 
 /* ======================
-   🧹 清除選擇（真正有用）
+   🧹 清除選擇（有用）
 ====================== */
 function clearSelect(){
   document.querySelectorAll(".opt")
@@ -273,12 +268,8 @@ function clearSelect(){
 ====================== */
 function openWrong(){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-
   document.getElementById("list").innerHTML =
-    d.slice(-40).reverse()
-    .map(x=>x.q+" → "+x.a)
-    .join("<br>");
-
+    d.slice(-50).reverse().map(x=>x.q+" → "+x.a).join("<br>");
   document.getElementById("modal").style.display="flex";
 }
 
@@ -291,8 +282,7 @@ function clearWrong(){
   document.getElementById("list").innerHTML="";
 }
 
-/* 點背景關閉 */
-function bgClose(e){
+function bgClose(){
   document.getElementById("modal").style.display="none";
 }
 
