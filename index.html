@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>TSMC Vocabulary Master App</title>
+<title>TSMC Vocabulary Quiz PRO</title>
 
 <style>
 body{
@@ -56,28 +56,23 @@ button:hover{
   border:none;
   background:#f7f7f7;
   cursor:pointer;
+  transition:.2s;
 }
 
-.opt:hover{background:#eaeaea;}
+/* ⭐ 點選後停留效果 */
+.opt.selected{
+  background:#4caf50 !important;
+  color:white;
+  transform:scale(1.02);
+}
+
+.opt:hover{
+  background:#e9e9e9;
+}
 
 #status{
   margin-top:10px;
   font-weight:bold;
-}
-
-.progress{
-  height:8px;
-  background:#eee;
-  border-radius:10px;
-  overflow:hidden;
-  margin:10px 0;
-}
-
-.barfill{
-  height:100%;
-  width:0%;
-  background:#4caf50;
-  transition:.3s;
 }
 
 /* modal */
@@ -118,9 +113,7 @@ button:hover{
 
 <div class="card">
 
-<h2>TSMC Vocabulary Master</h2>
-
-<div class="progress"><div id="bar" class="barfill"></div></div>
+<h2>TSMC Vocabulary PRO</h2>
 
 <div class="bar">
   <button onclick="toggleMode()">切換模式</button>
@@ -132,11 +125,9 @@ button:hover{
 <div id="opt"></div>
 <div id="status"></div>
 
-<div class="small" id="stats"></div>
-
 </div>
 
-<!-- modal -->
+<!-- 錯題 modal -->
 <div class="modal" id="modal">
   <div class="box">
 
@@ -155,155 +146,110 @@ button:hover{
 
 <script>
 
-/* =========================
-   📚 完整單字庫
-   （你原始 288 + 精簡保留）
-========================= */
+/* ======================
+   📚 單字庫
+====================== */
 const vocab = [
-["ability","能力"],["abnormal","異常的"],["abort","中止"],["absence","缺席"],
-["acid","酸"],["active","主動的"],["actual","真實的"],["add","增加"],
-["adjust","調整"],["AI","人工智慧"],["air shower","潔淨通道"],["alarm","警報"],
-["alert","警報"],["align","對焦"],["annually","每年的"],["area","區域"],
-["attach","附上"],["audit","稽核"],["automatic","自動的"],["automotive","汽車的"],
-["available","可使用的"],["average","平均"],["backup","支援"],["bank","暫存"],
-["basic","基礎的"],["beam","光束"],["benchmark","標竿"],["bottle","瓶子"],
-["bottom","底部"],["broken","破掉的"],["cancel","取消"],["card","卡片"],
-["cart","手推車"],["cassette","晶片盒"],["center","中心"],["certify","認證"],
-["change","更換"],["chart","圖表"],["check","檢查"],["chemical","化學品"],
-["chip","晶片"],["choose","選擇"],["clean","清潔"],["clean chamber","潔淨室"],
-["clear","清除"],["collect","蒐集"],["color","顏色"],["company","公司"],
-["complete","完成"],["computer","電腦"],["confirm","確認"],["contamination","污染"],
-["continue","繼續"],["control","控制"],["copy","拷貝"],["count","計算"],
-["customer","客戶"],["cycle","週期"],["data","資料"],["date","日期"],
-["defect","缺陷"],["delay","延遲"],["delete","刪除"],["equipment","設備"],
-["error","錯誤"],["etching","蝕刻"],["execute","執行"],["environment","環境"],
-["factory","工廠"],["focus","焦點"],["function","功能"],["gas","氣體"],
-["help","幫助"],["hold","暫停"],["input","輸入"],["inspect","檢查"],
-["instruction","指令"],["job","工作"],["label","標籤"],["learn","學習"],
-["liquid","液體"],["machine","機器"],["maintain","維護"],["mask","光罩"],
-["material","原料"],["measure","量測"],["monitor","監視器"],["operation","操作"],
-["output","輸出"],["parameter","參數"],["process","流程"],["product","產品"],
-["quality","品質"],["record","記錄"],["repair","修理"],["report","報告"],
-["reset","重設"],["run","運轉"],["safe","安全"],["system","系統"],
-["temperature","溫度"],["wafer","晶圓"],["yield","良率"]
+["ability","能力"],["abnormal","異常的"],["abort","中止"],
+["adjust","調整"],["AI","人工智慧"],["alarm","警報"],
+["area","區域"],["chip","晶片"],["clean","清潔"],
+["control","控制"],["data","資料"],["error","錯誤"],
+["factory","工廠"],["function","功能"],["job","工作"],
+["mask","光罩"],["process","流程"],["product","產品"],
+["system","系統"],["wafer","晶圓"]
 ];
 
-/* =========================
+/* ======================
    ⚙️ 狀態
-========================= */
+====================== */
 let mode="en2zh";
 let cur=null;
 let ans="";
 
-let correct=0;
-let wrong=0;
-let streak=0;
-
-let wrongSet = new Set();
-
-/* =========================
-   📊 進度
-========================= */
-function updateStats(){
-  let total = correct + wrong;
-  let rate = total===0?0:(correct/total*100);
-
-  document.getElementById("stats").innerHTML =
-    `✔ ${correct} / ✘ ${wrong} ｜ 正確率 ${rate.toFixed(1)}% ｜ 🔥連勝 ${streak}`;
-
-  document.getElementById("bar").style.width = rate + "%";
-}
-
-/* =========================
+/* ======================
    ❌ 錯題
-========================= */
+====================== */
 function saveWrong(q,a){
-  let key = q+"→"+a;
-  if(wrongSet.has(key)) return;
-
-  wrongSet.add(key);
-
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-  d.push({q,a});
 
+  // 去重
+  if(d.find(x=>x.q===q && x.a===a)) return;
+
+  d.push({q,a});
   localStorage.setItem("wrong",JSON.stringify(d));
 }
 
-/* =========================
-   🔁 出題（錯題優先）
-========================= */
+/* ======================
+   🔁 出題
+====================== */
 function next(){
 
-  let pool = Math.random()<0.3
-    ? JSON.parse(localStorage.getItem("wrong")||"[]")
-    : vocab;
-
-  if(pool.length===0) pool=vocab;
-
-  cur = pool[Math.floor(Math.random()*pool.length)];
+  cur = vocab[Math.floor(Math.random()*vocab.length)];
 
   let q = mode==="en2zh"?cur[0]:cur[1];
   ans = mode==="en2zh"?cur[1]:cur[0];
 
   document.getElementById("q").innerHTML =
     mode==="en2zh"
-    ? "英文："+q+" → 中文？"
-    : "中文："+q+" → 英文？";
+    ?"英文："+q+" → 中文？"
+    :"中文："+q+" → 英文？";
 
   let opt=[ans];
 
   while(opt.length<4){
     let r=vocab[Math.floor(Math.random()*vocab.length)];
-    let o=mode==="en2zh"?r[1]:r[0];
+    let o = mode==="en2zh"?r[1]:r[0];
     if(!opt.includes(o)) opt.push(o);
   }
 
   opt.sort(()=>Math.random()-0.5);
 
   document.getElementById("opt").innerHTML =
-    opt.map(o=>
-      `<button class="opt" onclick="check('${o}')">${o}</button>`
-    ).join("");
+    opt.map(o=>`
+      <button class="opt" onclick="check(this,'${o}')">
+        ${o}
+      </button>
+    `).join("");
 }
 
-/* =========================
-   ✔ 判斷
-========================= */
-function check(o){
+/* ======================
+   ✔ 檢查（重點：選中效果）
+====================== */
+function check(btn,o){
+
+  // ⭐ 清掉所有 selected
+  document.querySelectorAll(".opt")
+    .forEach(b=>b.classList.remove("selected"));
+
+  // ⭐ 加上選中效果
+  btn.classList.add("selected");
 
   if(o===ans){
-    correct++;
-    streak++;
-    document.getElementById("status").innerHTML="✔ 正確";
+    document.getElementById("status").innerText="✔ 正確";
     document.getElementById("status").style.color="green";
   }else{
-    wrong++;
-    streak=0;
-
-    document.getElementById("status").innerHTML="✘ 錯誤："+ans;
+    document.getElementById("status").innerText="✘ 錯誤："+ans;
     document.getElementById("status").style.color="red";
 
     saveWrong(cur[0]+" / "+cur[1], ans);
   }
-
-  updateStats();
 }
 
-/* =========================
+/* ======================
    🔄 模式
-========================= */
+====================== */
 function toggleMode(){
   mode = mode==="en2zh"?"zh2en":"en2zh";
 }
 
-/* =========================
-   🧾 錯題本
-========================= */
+/* ======================
+   ❌ 錯題本
+====================== */
 function openWrong(){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
 
   document.getElementById("list").innerHTML =
-    d.slice(-40).reverse()
+    d.slice(-30).reverse()
     .map(x=>x.q+" → "+x.a)
     .join("<br>");
 
@@ -316,11 +262,8 @@ function closeWrong(){
 
 function clearWrong(){
   localStorage.removeItem("wrong");
-  wrongSet.clear();
   document.getElementById("list").innerHTML="";
 }
-
-updateStats();
 
 </script>
 
