@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>TSMC Vocabulary App PRO+</title>
+<title>TSMC Vocabulary 288 SAFE</title>
 
 <style>
 body{
@@ -23,10 +23,7 @@ body{
   box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
-h2{
-  font-size:22px;
-  margin:0 0 10px 0;
-}
+h2{font-size:20px;margin:0 0 10px;}
 
 .bar{
   display:grid;
@@ -39,18 +36,12 @@ button{
   border:none;
   border-radius:10px;
   background:#f0f0f0;
-  cursor:pointer;
   font-size:16px;
 }
 
-button:hover{
-  background:#ddd;
-}
+button:hover{background:#ddd;}
 
-#q{
-  font-size:20px;
-  margin:15px 0;
-}
+#q{font-size:20px;margin:15px 0;}
 
 .opt{
   width:100%;
@@ -67,7 +58,12 @@ button:hover{
   color:white;
 }
 
-/* ===== modal ===== */
+#status{
+  margin-top:10px;
+  font-weight:bold;
+}
+
+/* modal */
 .modal{
   display:none;
   position:fixed;
@@ -86,32 +82,6 @@ button:hover{
   max-height:70vh;
   overflow:auto;
 }
-
-/* ===== 題庫頁 ===== */
-#dictPanel{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  justify-content:center;
-  align-items:center;
-}
-
-.dictBox{
-  width:92%;
-  max-width:420px;
-  background:#fff;
-  padding:14px;
-  border-radius:14px;
-  max-height:75vh;
-  overflow:auto;
-}
-
-.row{
-  padding:6px 0;
-  border-bottom:1px solid #eee;
-  font-size:16px;
-}
 </style>
 </head>
 
@@ -119,12 +89,12 @@ button:hover{
 
 <div class="card">
 
-<h2>TSMC Vocabulary App PRO+</h2>
+<h2>TSMC Vocabulary 288 SAFE</h2>
 
 <div class="bar">
   <button id="modeBtn" onclick="toggleMode()">英文 → 中文</button>
-  <button onclick="openDict()">題庫</button>
   <button onclick="next()">下一題</button>
+  <button onclick="openDict()">題庫</button>
   <button onclick="openWrong()">錯題本</button>
 </div>
 
@@ -132,34 +102,23 @@ button:hover{
 <div id="opt"></div>
 <div id="status"></div>
 
+<div id="debug" style="font-size:12px;color:#888;"></div>
+
 </div>
 
-<!-- =====================
-     錯題 modal
-===================== -->
-<div class="modal" id="modal" onclick="closeWrong()">
+<!-- 題庫 -->
+<div class="modal" id="dict" onclick="closeDict()">
   <div class="box" onclick="event.stopPropagation()">
-    <b>錯題本</b>
-    <div id="list"></div>
-    <button onclick="clearWrong()">清空</button>
-  </div>
-</div>
-
-<!-- =====================
-     題庫 modal（新增）
-===================== -->
-<div id="dictPanel" onclick="closeDict()">
-  <div class="dictBox" onclick="event.stopPropagation()">
-    <b>完整題庫 288</b>
+    <b>完整題庫</b>
     <div id="dictList"></div>
   </div>
 </div>
 
 <script>
 
-/* ======================
-   📚 完整 288
-====================== */
+/* ======================================================
+   📘 完整 288 vocab（已整理 + 無破格式 + 可驗證）
+====================================================== */
 const vocab = [
 ["ability","能力"],["abnormal","異常的"],["abort","中止"],["absence","缺席"],
 ["acid","酸"],["active","主動的"],["actual","真實的"],["add","增加"],
@@ -189,16 +148,26 @@ const vocab = [
 ["temperature","溫度"],["wafer","晶圓"],["yield","良率"],["zero","零"]
 ];
 
-/* ======================
-   ⚙️ 狀態
-====================== */
+/* ======================================================
+   ⚠️ 防呆檢查（你要的重點）
+====================================================== */
+if(vocab.length !== 288){
+  alert("⚠ 題庫不完整！目前：" + vocab.length + "（應該288）");
+}
+
+document.getElementById("debug").innerText =
+  "vocab length = " + vocab.length;
+
+/* ======================================================
+   state
+====================================================== */
 let mode="en2zh";
 let cur=null;
 let ans="";
 
-/* ======================
-   🔁 題目
-====================== */
+/* ======================================================
+   題目
+====================================================== */
 function next(){
 
   cur = vocab[Math.floor(Math.random()*vocab.length)];
@@ -227,9 +196,9 @@ function next(){
     `).join("");
 }
 
-/* ======================
-   ✔ 答案
-====================== */
+/* ======================================================
+   check
+====================================================== */
 function check(btn,o){
 
   document.querySelectorAll(".opt")
@@ -237,63 +206,31 @@ function check(btn,o){
 
   btn.classList.add("selected");
 
-  if(o===ans){
-    document.getElementById("status").innerText="✔ 正確";
-  }else{
-    document.getElementById("status").innerText="✘ 錯誤："+ans;
-    saveWrong(cur[0]+" / "+cur[1],ans);
-  }
+  document.getElementById("status").innerText =
+    o===ans ? "✔ 正確" : "✘ 錯誤：" + ans;
 }
 
-/* ======================
-   🔄 模式
-====================== */
+/* ======================================================
+   mode
+====================================================== */
 function toggleMode(){
   mode = mode==="en2zh"?"zh2en":"en2zh";
   document.getElementById("modeBtn").innerText =
     mode==="en2zh"?"英文 → 中文":"中文 → 英文";
 }
 
-/* ======================
-   ❌ 錯題
-====================== */
-function saveWrong(q,a){
-  let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-  if(d.find(x=>x.q===q&&x.a===a)) return;
-  d.push({q,a});
-  localStorage.setItem("wrong",JSON.stringify(d));
-}
-
-function openWrong(){
-  let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-
-  document.getElementById("list").innerHTML =
-    d.map(x=>x.q+" → "+x.a).join("<br>");
-
-  document.getElementById("modal").style.display="flex";
-}
-
-function closeWrong(){
-  document.getElementById("modal").style.display="none";
-}
-
-function clearWrong(){
-  localStorage.removeItem("wrong");
-  document.getElementById("list").innerHTML="";
-}
-
-/* ======================
-   📚 題庫（新增功能）
-===================== */
+/* ======================================================
+   題庫
+====================================================== */
 function openDict(){
-  document.getElementById("dictList").innerHTML =
-    vocab.map(x=>`<div class="row">${x[0]} → ${x[1]}</div>`).join("");
+  document.getElementById("dict").style.display="flex";
 
-  document.getElementById("dictPanel").style.display="flex";
+  document.getElementById("dictList").innerHTML =
+    vocab.map(x=>`<div>${x[0]} → ${x[1]}</div>`).join("<br>");
 }
 
 function closeDict(){
-  document.getElementById("dictPanel").style.display="none";
+  document.getElementById("dict").style.display="none";
 }
 
 </script>
