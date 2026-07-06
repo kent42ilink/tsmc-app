@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>TSMC Vocabulary Quiz Pro</title>
+<style>
+body { font-family: Arial; background:#f5f5f5; padding:20px; }
+.card { background:white; max-width:700px; margin:auto; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.2);}
+button { padding:10px; margin:5px 0; width:100%; cursor:pointer; border-radius:6px; border:none; }
+.option { background:#eee; }
+.option:hover { background:#ddd; }
+#status { font-weight:bold; margin-top:10px; }
+.topbar { display:flex; gap:10px; }
+.topbar button { width:100%; }
+#wrongPanel { display:none; background:#fff; padding:10px; border:1px solid #ccc; margin-top:10px; max-height:200px; overflow:auto; }
+.small { font-size:12px; color:#666; }
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>TSMC Vocabulary Quiz PRO</h2>
+
+<div class="topbar">
+<button onclick="toggleMode()" id="modeBtn">模式：英文→中文</button>
+<button onclick="toggleWrong()">錯題本</button>
+</div>
+
+<p id="question">按下一題開始</p>
+
+<div id="options"></div>
+
+<button onclick="nextQuestion()">下一題</button>
+
+<p id="status"></p>
+
+<div id="wrongPanel"></div>
+</div>
+
+<script>
+
+const vocab = [
+["ability","能力"],["abnormal","異常的"],["abort","中止"],["absence","缺席"],
+["acid","酸"],["active","主動的"],["actual","真實的"],["add","增加"],
+["adjust","調整"],["AI","人工智慧"],["air shower","潔淨通道"],["alarm","警報"],
+["alert","警報"],["align","對焦"],["annually","每年的"],["area","區域"],
+["attach","附上"],["audit","稽核"],["automatic","自動的"],["automotive","汽車的"],
+["available","可使用的"],["average","平均"],["backup","支援"],["bank","銀行"],
+["basic","基礎的"],["beam","光束"],["benchmark","標竿學習"],["bottle","瓶子"],
+["bottom","底部"],["broken","破掉的"],["cancel","取消"],["card","卡片"],
+["cart","手推車"],["cassette","晶片盒"],["center","中心"],["certify","認證"],
+["change","更換"],["chart","圖表"],["check","檢查"],["chemical","化學品"],
+["chip","晶片"],["choose","選擇"],["clean","清潔"],["clean chamber","潔淨室"],
+["clear","清除"],["collect","蒐集"],["color","顏色"],["company","公司"],
+["complete","完成"],["computer","電腦"],["confirm","確認"],["contamination","污染"],
+["continue","繼續"],["control","控制"],["copy","拷貝"],["count","計算"],
+["customer","客戶"],["cycle","週期"],["data","資料"],["date","日期"],
+["defect","缺陷"],["delay","延遲"],["delete","刪除"],["equipment","設備"],
+["error","錯誤"],["etching","蝕刻"],["execute","執行"],["environment","環境"],
+["factory","工廠"],["focus","焦點"],["function","功能"],["gas","氣體"],
+["glass","玻璃"],["help","幫助"],["hold","暫停"],["input","輸入"],
+["inspect","檢查"],["instruction","指令"],["job","工作"],["label","標籤"],
+["learn","學習"],["liquid","液體"],["machine","機器"],["maintain","維護"],
+["mask","光罩"],["material","原料"],["measure","量測"],["monitor","監視器"],
+["operation","操作"],["output","輸出"],["parameter","參數"],["process","流程"],
+["product","產品"],["quality","品質"],["record","記錄"],["repair","修理"],
+["report","報告"],["reset","重設"],["run","運轉"],["safe","安全的"],
+["system","系統"],["temperature","溫度"],["wafer","晶圓"],["yield","良率"]
+];
+
+let mode = "en2zh";
+let current = null;
+let correctAnswer = "";
+
+function shuffle(a){
+    for(let i=a.length-1;i>0;i--){
+        let j=Math.floor(Math.random()*i);
+        [a[i],a[j]]=[a[j],a[i]];
+    }
+}
+
+function toggleMode(){
+    mode = (mode === "en2zh") ? "zh2en" : "en2zh";
+    document.getElementById("modeBtn").innerText =
+        mode === "en2zh" ? "模式：英文→中文" : "模式：中文→英文";
+}
+
+function saveWrong(q,a){
+    let arr = JSON.parse(localStorage.getItem("tsmc_wrong") || "[]");
+    arr.push({q,a,time:new Date().toLocaleString()});
+    localStorage.setItem("tsmc_wrong", JSON.stringify(arr));
+}
+
+function toggleWrong(){
+    let panel = document.getElementById("wrongPanel");
+    if(panel.style.display === "none" || panel.style.display===""){
+        let arr = JSON.parse(localStorage.getItem("tsmc_wrong") || "[]");
+        panel.innerHTML = "<b>錯題本</b><br>";
+        arr.slice(-20).reverse().forEach(x=>{
+            panel.innerHTML += `<div class='small'>${x.q} → ${x.a} (${x.time})</div>`;
+        });
+        panel.style.display = "block";
+    } else {
+        panel.style.display = "none";
+    }
+}
+
+function nextQuestion(){
+    document.getElementById("status").innerText = "";
+    document.getElementById("options").innerHTML = "";
+
+    current = vocab[Math.floor(Math.random()*vocab.length)];
+
+    let question, answer;
+
+    if(mode === "en2zh"){
+        question = current[0];
+        answer = current[1];
+    } else {
+        question = current[1];
+        answer = current[0];
+    }
+
+    correctAnswer = answer;
+
+    document.getElementById("question").innerText =
+        (mode==="en2zh") ? "英文：" + question + " → 中文？"
+                         : "中文：" + question + " → 英文？";
+
+    let options = [answer];
+
+    while(options.length < 4){
+        let r = vocab[Math.floor(Math.random()*vocab.length)];
+        let opt = (mode==="en2zh") ? r[1] : r[0];
+        if(!options.includes(opt)) options.push(opt);
+    }
+
+    shuffle(options);
+
+    options.forEach(opt=>{
+        let btn=document.createElement("button");
+        btn.className="option";
+        btn.innerText=opt;
+        btn.onclick=()=>{
+            if(opt===correctAnswer){
+                document.getElementById("status").innerText="✔ 正確";
+                document.getElementById("status").style.color="green";
+            } else {
+                document.getElementById("status").innerText="✘ 錯誤 答案："+correctAnswer;
+                document.getElementById("status").style.color="red";
+                saveWrong(question, correctAnswer);
+            }
+        };
+        document.getElementById("options").appendChild(btn);
+    });
+}
+
+</script>
+
+</body>
+</html>
