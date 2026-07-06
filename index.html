@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>TSMC Vocabulary 288 App PRO</title>
+<title>TSMC Vocabulary App PRO+</title>
 
 <style>
 body{
@@ -60,7 +60,6 @@ button:hover{
   border:none;
   background:#f7f7f7;
   font-size:18px;
-  transition:0.2s;
 }
 
 .opt.selected{
@@ -68,13 +67,12 @@ button:hover{
   color:white;
 }
 
-/* ===== MODAL（完全置中修正版） ===== */
+/* ===== modal ===== */
 .modal{
   display:none;
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.6);
-  display:flex;
   justify-content:center;
   align-items:center;
 }
@@ -87,19 +85,32 @@ button:hover{
   border-radius:14px;
   max-height:70vh;
   overflow:auto;
-  animation:pop .15s ease;
 }
 
-@keyframes pop{
-  from{transform:scale(0.9);opacity:0;}
-  to{transform:scale(1);opacity:1;}
-}
-
-.head{
-  display:flex;
-  justify-content:space-between;
+/* ===== 題庫頁 ===== */
+#dictPanel{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
   align-items:center;
-  margin-bottom:10px;
+}
+
+.dictBox{
+  width:92%;
+  max-width:420px;
+  background:#fff;
+  padding:14px;
+  border-radius:14px;
+  max-height:75vh;
+  overflow:auto;
+}
+
+.row{
+  padding:6px 0;
+  border-bottom:1px solid #eee;
+  font-size:16px;
 }
 </style>
 </head>
@@ -108,13 +119,13 @@ button:hover{
 
 <div class="card">
 
-<h2>TSMC Vocabulary 288</h2>
+<h2>TSMC Vocabulary App PRO+</h2>
 
 <div class="bar">
   <button id="modeBtn" onclick="toggleMode()">英文 → 中文</button>
-  <button onclick="openWrong()">錯題本</button>
+  <button onclick="openDict()">題庫</button>
   <button onclick="next()">下一題</button>
-  <button onclick="clearSelect()">清除選擇</button>
+  <button onclick="openWrong()">錯題本</button>
 </div>
 
 <div id="q"></div>
@@ -123,27 +134,31 @@ button:hover{
 
 </div>
 
-<!-- ===== MODAL ===== -->
-<div class="modal" id="modal" onclick="bgClose()">
+<!-- =====================
+     錯題 modal
+===================== -->
+<div class="modal" id="modal" onclick="closeWrong()">
   <div class="box" onclick="event.stopPropagation()">
-
-    <div class="head">
-      <b>錯題本</b>
-      <div>
-        <button onclick="clearWrong()">清空</button>
-        <button onclick="closeWrong()">✕</button>
-      </div>
-    </div>
-
+    <b>錯題本</b>
     <div id="list"></div>
+    <button onclick="clearWrong()">清空</button>
+  </div>
+</div>
 
+<!-- =====================
+     題庫 modal（新增）
+===================== -->
+<div id="dictPanel" onclick="closeDict()">
+  <div class="dictBox" onclick="event.stopPropagation()">
+    <b>完整題庫 288</b>
+    <div id="dictList"></div>
   </div>
 </div>
 
 <script>
 
 /* ======================
-   📚 完整 288 單字（全部整理版）
+   📚 完整 288
 ====================== */
 const vocab = [
 ["ability","能力"],["abnormal","異常的"],["abort","中止"],["absence","缺席"],
@@ -182,21 +197,9 @@ let cur=null;
 let ans="";
 
 /* ======================
-   ❌ 錯題
-====================== */
-function saveWrong(q,a){
-  let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-  if(d.find(x=>x.q===q && x.a===a)) return;
-  d.push({q,a});
-  localStorage.setItem("wrong",JSON.stringify(d));
-}
-
-/* ======================
-   🔁 出題
+   🔁 題目
 ====================== */
 function next(){
-
-  clearSelect();
 
   cur = vocab[Math.floor(Math.random()*vocab.length)];
 
@@ -225,7 +228,7 @@ function next(){
 }
 
 /* ======================
-   ✔ 選擇
+   ✔ 答案
 ====================== */
 function check(btn,o){
 
@@ -236,10 +239,8 @@ function check(btn,o){
 
   if(o===ans){
     document.getElementById("status").innerText="✔ 正確";
-    document.getElementById("status").style.color="green";
   }else{
     document.getElementById("status").innerText="✘ 錯誤："+ans;
-    document.getElementById("status").style.color="red";
     saveWrong(cur[0]+" / "+cur[1],ans);
   }
 }
@@ -254,22 +255,21 @@ function toggleMode(){
 }
 
 /* ======================
-   🧹 清除選擇（有用）
+   ❌ 錯題
 ====================== */
-function clearSelect(){
-  document.querySelectorAll(".opt")
-    .forEach(b=>b.classList.remove("selected"));
-
-  document.getElementById("status").innerText="";
+function saveWrong(q,a){
+  let d = JSON.parse(localStorage.getItem("wrong")||"[]");
+  if(d.find(x=>x.q===q&&x.a===a)) return;
+  d.push({q,a});
+  localStorage.setItem("wrong",JSON.stringify(d));
 }
 
-/* ======================
-   ❌ 錯題本
-====================== */
 function openWrong(){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
+
   document.getElementById("list").innerHTML =
-    d.slice(-50).reverse().map(x=>x.q+" → "+x.a).join("<br>");
+    d.map(x=>x.q+" → "+x.a).join("<br>");
+
   document.getElementById("modal").style.display="flex";
 }
 
@@ -282,8 +282,18 @@ function clearWrong(){
   document.getElementById("list").innerHTML="";
 }
 
-function bgClose(){
-  document.getElementById("modal").style.display="none";
+/* ======================
+   📚 題庫（新增功能）
+===================== */
+function openDict(){
+  document.getElementById("dictList").innerHTML =
+    vocab.map(x=>`<div class="row">${x[0]} → ${x[1]}</div>`).join("");
+
+  document.getElementById("dictPanel").style.display="flex";
+}
+
+function closeDict(){
+  document.getElementById("dictPanel").style.display="none";
 }
 
 </script>
