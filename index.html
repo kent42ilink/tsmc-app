@@ -1,159 +1,255 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>TSMC Vocabulary Quiz Pro</title>
+<title>TSMC Vocabulary App PRO+</title>
+
 <style>
-body { font-family: Arial; background:#f5f5f5; padding:20px; }
-.card { background:white; max-width:700px; margin:auto; padding:20px; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.2);}
-button { padding:10px; margin:5px 0; width:100%; cursor:pointer; border-radius:6px; border:none; }
-.option { background:#eee; }
-.option:hover { background:#ddd; }
-#status { font-weight:bold; margin-top:10px; }
-.topbar { display:flex; gap:10px; }
-.topbar button { width:100%; }
-#wrongPanel { display:none; background:#fff; padding:10px; border:1px solid #ccc; margin-top:10px; max-height:200px; overflow:auto; }
-.small { font-size:12px; color:#666; }
+body{
+  font-family:Arial;
+  background:#f4f6f8;
+  padding:20px;
+}
+
+.card{
+  max-width:600px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2{
+  margin-top:0;
+}
+
+.topbar{
+  display:flex;
+  gap:8px;
+}
+
+button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#f0f0f0;
+  cursor:pointer;
+  transition:.2s;
+}
+
+button:hover{
+  background:#ddd;
+  transform:scale(1.02);
+}
+
+#q{
+  font-size:18px;
+  margin:15px 0;
+}
+
+.opt{
+  width:100%;
+  margin:6px 0;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  background:#f7f7f7;
+  cursor:pointer;
+}
+
+.opt:hover{
+  background:#e9e9e9;
+}
+
+#status{
+  margin-top:10px;
+  font-weight:bold;
+}
+
+.badge{
+  display:inline-block;
+  padding:3px 8px;
+  border-radius:8px;
+  font-size:12px;
+  margin-left:5px;
+}
+
+.good{background:#d1f7d6;color:#1b7a2a;}
+.bad{background:#ffe1e1;color:#a10000;}
+
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+}
+
+.box{
+  width:85%;
+  max-width:420px;
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  max-height:70vh;
+  overflow:auto;
+}
 </style>
 </head>
+
 <body>
 
 <div class="card">
-<h2>TSMC Vocabulary Quiz PRO</h2>
+  <h2>TSMC Vocabulary PRO+</h2>
 
-<div class="topbar">
-<button onclick="toggleMode()" id="modeBtn">模式：英文→中文</button>
-<button onclick="toggleWrong()">錯題本</button>
+  <div class="topbar">
+    <button onclick="toggleMode()">切換模式</button>
+    <button onclick="openWrong()">錯題本</button>
+    <button onclick="next()">下一題</button>
+  </div>
+
+  <div id="q"></div>
+  <div id="opt"></div>
+  <div id="status"></div>
 </div>
 
-<p id="question">按下一題開始</p>
-
-<div id="options"></div>
-
-<button onclick="nextQuestion()">下一題</button>
-
-<p id="status"></p>
-
-<div id="wrongPanel"></div>
+<!-- 錯題彈窗 -->
+<div class="modal" id="modal">
+  <div class="box">
+    <h3>錯題本</h3>
+    <div id="wrongList"></div>
+    <button onclick="clearWrong()">清空錯題</button>
+    <button onclick="closeWrong()">關閉</button>
+  </div>
 </div>
 
 <script>
 
+/* ======================
+   📚 單字庫
+====================== */
 const vocab = [
-["ability","能力"],["abnormal","異常的"],["abort","中止"],["absence","缺席"],
-["acid","酸"],["active","主動的"],["actual","真實的"],["add","增加"],
-["adjust","調整"],["AI","人工智慧"],["air shower","潔淨通道"],["alarm","警報"],
-["alert","警報"],["align","對焦"],["annually","每年的"],["area","區域"],
-["attach","附上"],["audit","稽核"],["automatic","自動的"],["automotive","汽車的"],
-["available","可使用的"],["average","平均"],["backup","支援"],["bank","銀行"],
-["basic","基礎的"],["beam","光束"],["benchmark","標竿學習"],["bottle","瓶子"],
-["bottom","底部"],["broken","破掉的"],["cancel","取消"],["card","卡片"],
-["cart","手推車"],["cassette","晶片盒"],["center","中心"],["certify","認證"],
-["change","更換"],["chart","圖表"],["check","檢查"],["chemical","化學品"],
-["chip","晶片"],["choose","選擇"],["clean","清潔"],["clean chamber","潔淨室"],
-["clear","清除"],["collect","蒐集"],["color","顏色"],["company","公司"],
-["complete","完成"],["computer","電腦"],["confirm","確認"],["contamination","污染"],
-["continue","繼續"],["control","控制"],["copy","拷貝"],["count","計算"],
-["customer","客戶"],["cycle","週期"],["data","資料"],["date","日期"],
-["defect","缺陷"],["delay","延遲"],["delete","刪除"],["equipment","設備"],
-["error","錯誤"],["etching","蝕刻"],["execute","執行"],["environment","環境"],
-["factory","工廠"],["focus","焦點"],["function","功能"],["gas","氣體"],
-["glass","玻璃"],["help","幫助"],["hold","暫停"],["input","輸入"],
-["inspect","檢查"],["instruction","指令"],["job","工作"],["label","標籤"],
-["learn","學習"],["liquid","液體"],["machine","機器"],["maintain","維護"],
-["mask","光罩"],["material","原料"],["measure","量測"],["monitor","監視器"],
-["operation","操作"],["output","輸出"],["parameter","參數"],["process","流程"],
-["product","產品"],["quality","品質"],["record","記錄"],["repair","修理"],
-["report","報告"],["reset","重設"],["run","運轉"],["safe","安全的"],
-["system","系統"],["temperature","溫度"],["wafer","晶圓"],["yield","良率"]
+["ability","能力"],["abnormal","異常的"],["abort","中止"],
+["adjust","調整"],["AI","人工智慧"],["alarm","警報"],
+["area","區域"],["chip","晶片"],["clean","清潔"],
+["control","控制"],["data","資料"],["error","錯誤"],
+["factory","工廠"],["function","功能"],["job","工作"],
+["mask","光罩"],["process","流程"],["product","產品"],
+["system","系統"],["wafer","晶圓"]
 ];
 
-let mode = "en2zh";
-let current = null;
-let correctAnswer = "";
+/* ======================
+   ⚙️ 狀態
+====================== */
+let mode="en2zh";
+let cur=null;
+let ans="";
+let score = JSON.parse(localStorage.getItem("score")||"{}");
 
-function shuffle(a){
-    for(let i=a.length-1;i>0;i--){
-        let j=Math.floor(Math.random()*i);
-        [a[i],a[j]]=[a[j],a[i]];
-    }
-}
-
-function toggleMode(){
-    mode = (mode === "en2zh") ? "zh2en" : "en2zh";
-    document.getElementById("modeBtn").innerText =
-        mode === "en2zh" ? "模式：英文→中文" : "模式：中文→英文";
-}
-
+/* ======================
+   🔁 錯題系統
+====================== */
 function saveWrong(q,a){
-    let arr = JSON.parse(localStorage.getItem("tsmc_wrong") || "[]");
-    arr.push({q,a,time:new Date().toLocaleString()});
-    localStorage.setItem("tsmc_wrong", JSON.stringify(arr));
+  let w = JSON.parse(localStorage.getItem("wrong")||"[]");
+  w.push({q,a});
+  localStorage.setItem("wrong",JSON.stringify(w));
 }
 
-function toggleWrong(){
-    let panel = document.getElementById("wrongPanel");
-    if(panel.style.display === "none" || panel.style.display===""){
-        let arr = JSON.parse(localStorage.getItem("tsmc_wrong") || "[]");
-        panel.innerHTML = "<b>錯題本</b><br>";
-        arr.slice(-20).reverse().forEach(x=>{
-            panel.innerHTML += `<div class='small'>${x.q} → ${x.a} (${x.time})</div>`;
-        });
-        panel.style.display = "block";
-    } else {
-        panel.style.display = "none";
-    }
+/* ======================
+   🧠 熟練度
+====================== */
+function mark(word, correct){
+  if(!score[word]) score[word]={c:0,w:0};
+
+  if(correct) score[word].c++;
+  else score[word].w++;
+
+  localStorage.setItem("score",JSON.stringify(score));
 }
 
-function nextQuestion(){
-    document.getElementById("status").innerText = "";
-    document.getElementById("options").innerHTML = "";
+/* ======================
+   🔀 題目
+====================== */
+function next(){
 
-    current = vocab[Math.floor(Math.random()*vocab.length)];
+  cur = vocab[Math.floor(Math.random()*vocab.length)];
 
-    let question, answer;
+  let q = mode==="en2zh"?cur[0]:cur[1];
+  ans = mode==="en2zh"?cur[1]:cur[0];
 
-    if(mode === "en2zh"){
-        question = current[0];
-        answer = current[1];
-    } else {
-        question = current[1];
-        answer = current[0];
-    }
+  document.getElementById("q").innerHTML =
+    mode==="en2zh"
+    ?"英文："+q+" → 中文？"
+    :"中文："+q+" → 英文？";
 
-    correctAnswer = answer;
+  let opt=[ans];
 
-    document.getElementById("question").innerText =
-        (mode==="en2zh") ? "英文：" + question + " → 中文？"
-                         : "中文：" + question + " → 英文？";
+  while(opt.length<4){
+    let r=vocab[Math.floor(Math.random()*vocab.length)];
+    let o = mode==="en2zh"?r[1]:r[0];
+    if(!opt.includes(o)) opt.push(o);
+  }
 
-    let options = [answer];
+  opt.sort(()=>Math.random()-0.5);
 
-    while(options.length < 4){
-        let r = vocab[Math.floor(Math.random()*vocab.length)];
-        let opt = (mode==="en2zh") ? r[1] : r[0];
-        if(!options.includes(opt)) options.push(opt);
-    }
+  document.getElementById("opt").innerHTML =
+    opt.map(o=>`
+      <button class="opt" onclick="check('${o}')">
+        ${o}
+      </button>
+    `).join("");
+}
 
-    shuffle(options);
+/* ======================
+   ✔ 答案判斷
+====================== */
+function check(o){
 
-    options.forEach(opt=>{
-        let btn=document.createElement("button");
-        btn.className="option";
-        btn.innerText=opt;
-        btn.onclick=()=>{
-            if(opt===correctAnswer){
-                document.getElementById("status").innerText="✔ 正確";
-                document.getElementById("status").style.color="green";
-            } else {
-                document.getElementById("status").innerText="✘ 錯誤 答案："+correctAnswer;
-                document.getElementById("status").style.color="red";
-                saveWrong(question, correctAnswer);
-            }
-        };
-        document.getElementById("options").appendChild(btn);
-    });
+  if(o===ans){
+    document.getElementById("status").innerHTML=
+      "✔ 正確 <span class='badge good'>GOOD</span>";
+
+    mark(cur[0], true);
+  }else{
+    document.getElementById("status").innerHTML=
+      "✘ 錯誤 <span class='badge bad'>WRONG</span>";
+
+    saveWrong(cur[0]+" / "+cur[1], ans);
+    mark(cur[0], false);
+  }
+}
+
+/* ======================
+   🔄 模式
+====================== */
+function toggleMode(){
+  mode = mode==="en2zh"?"zh2en":"en2zh";
+}
+
+/* ======================
+   ❌ 錯題本
+====================== */
+function openWrong(){
+  let w = JSON.parse(localStorage.getItem("wrong")||"[]");
+
+  document.getElementById("wrongList").innerHTML =
+    w.slice(-30).reverse().map(x=>
+      x.q+" → "+x.a
+    ).join("<br>");
+
+  document.getElementById("modal").style.display="flex";
+}
+
+function closeWrong(){
+  document.getElementById("modal").style.display="none";
+}
+
+function clearWrong(){
+  localStorage.removeItem("wrong");
+  document.getElementById("wrongList").innerHTML="";
 }
 
 </script>
