@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<title>TSMC Vocabulary Quiz PRO</title>
+<title>TSMC Vocabulary App PRO</title>
 
 <style>
 body{
@@ -10,24 +10,27 @@ body{
   background:#f4f6f8;
   padding:10px;
   margin:0;
+  font-size:18px;
 }
 
+/* 卡片 */
 .card{
   width:100%;
   max-width:520px;
   margin:auto;
   background:#fff;
-  padding:14px;
+  padding:16px;
   border-radius:14px;
   box-shadow:0 8px 20px rgba(0,0,0,0.1);
 }
 
+/* 標題 */
 h2{
-  font-size:18px;
+  font-size:22px;
   margin:0 0 10px 0;
 }
 
-/* 上方按鈕改成2x2更適合手機 */
+/* 上方按鈕 */
 .bar{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -35,41 +38,46 @@ h2{
 }
 
 button{
-  padding:10px;
+  padding:12px;
   border:none;
   border-radius:10px;
   background:#f0f0f0;
   cursor:pointer;
-  font-size:14px;
+  font-size:16px;
+}
+
+button:hover{
+  background:#ddd;
 }
 
 /* 題目 */
 #q{
-  font-size:16px;
-  margin:12px 0;
+  font-size:20px;
+  margin:15px 0;
 }
 
 /* 選項 */
 .opt{
   width:100%;
   margin:6px 0;
-  padding:12px;
+  padding:14px;
   border-radius:10px;
   border:none;
   background:#f7f7f7;
-  font-size:15px;
+  font-size:18px;
+  transition:0.2s;
 }
 
-/* 點選效果 */
+/* 選中效果 */
 .opt.selected{
   background:#4caf50 !important;
-  color:white;
+  color:#fff;
 }
 
-/* 狀態文字 */
+/* 狀態 */
 #status{
   margin-top:10px;
-  font-size:14px;
+  font-weight:bold;
 }
 
 /* modal */
@@ -82,14 +90,23 @@ button{
   align-items:center;
 }
 
+/* 彈窗內容 */
 .box{
   width:92%;
   max-width:420px;
   background:#fff;
-  padding:12px;
+  padding:14px;
   border-radius:14px;
   max-height:70vh;
   overflow:auto;
+}
+
+/* header */
+.head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
 }
 </style>
 </head>
@@ -98,12 +115,13 @@ button{
 
 <div class="card">
 
-<h2>TSMC Vocabulary PRO</h2>
+<h2>TSMC Vocabulary App PRO</h2>
 
 <div class="bar">
-  <button onclick="toggleMode()">切換模式</button>
+  <button id="modeBtn" onclick="toggleMode()">模式：英文 → 中文</button>
   <button onclick="openWrong()">錯題本</button>
   <button onclick="next()">下一題</button>
+  <button onclick="clearSelect()">清除選擇</button>
 </div>
 
 <div id="q"></div>
@@ -112,9 +130,9 @@ button{
 
 </div>
 
-<!-- 錯題 modal -->
-<div class="modal" id="modal">
-  <div class="box">
+<!-- modal -->
+<div class="modal" id="modal" onclick="bgClose(event)">
+  <div class="box" onclick="event.stopPropagation()">
 
     <div class="head">
       <b>錯題本</b>
@@ -152,12 +170,11 @@ let cur=null;
 let ans="";
 
 /* ======================
-   ❌ 錯題
+   ❌ 錯題（去重）
 ====================== */
 function saveWrong(q,a){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
 
-  // 去重
   if(d.find(x=>x.q===q && x.a===a)) return;
 
   d.push({q,a});
@@ -168,6 +185,8 @@ function saveWrong(q,a){
    🔁 出題
 ====================== */
 function next(){
+
+  clearSelect();
 
   cur = vocab[Math.floor(Math.random()*vocab.length)];
 
@@ -191,22 +210,18 @@ function next(){
 
   document.getElementById("opt").innerHTML =
     opt.map(o=>`
-      <button class="opt" onclick="check(this,'${o}')">
-        ${o}
-      </button>
+      <button class="opt" onclick="check(this,'${o}')">${o}</button>
     `).join("");
 }
 
 /* ======================
-   ✔ 檢查（重點：選中效果）
+   ✔ 選擇 + 停留效果
 ====================== */
 function check(btn,o){
 
-  // ⭐ 清掉所有 selected
   document.querySelectorAll(".opt")
     .forEach(b=>b.classList.remove("selected"));
 
-  // ⭐ 加上選中效果
   btn.classList.add("selected");
 
   if(o===ans){
@@ -216,15 +231,28 @@ function check(btn,o){
     document.getElementById("status").innerText="✘ 錯誤："+ans;
     document.getElementById("status").style.color="red";
 
-    saveWrong(cur[0]+" / "+cur[1], ans);
+    saveWrong(cur[0]+" / "+cur[1],ans);
   }
 }
 
 /* ======================
-   🔄 模式
+   🔄 模式（完整顯示）
 ====================== */
 function toggleMode(){
   mode = mode==="en2zh"?"zh2en":"en2zh";
+
+  document.getElementById("modeBtn").innerText =
+    mode==="en2zh"
+    ?"模式：英文 → 中文"
+    :"模式：中文 → 英文";
+}
+
+/* ======================
+   🧹 清除選擇
+====================== */
+function clearSelect(){
+  document.querySelectorAll(".opt")
+    .forEach(b=>b.classList.remove("selected"));
 }
 
 /* ======================
@@ -234,7 +262,7 @@ function openWrong(){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
 
   document.getElementById("list").innerHTML =
-    d.slice(-30).reverse()
+    d.slice(-40).reverse()
     .map(x=>x.q+" → "+x.a)
     .join("<br>");
 
@@ -248,6 +276,11 @@ function closeWrong(){
 function clearWrong(){
   localStorage.removeItem("wrong");
   document.getElementById("list").innerHTML="";
+}
+
+/* 點背景關閉 */
+function bgClose(e){
+  document.getElementById("modal").style.display="none";
 }
 
 </script>
