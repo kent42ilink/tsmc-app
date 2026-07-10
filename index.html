@@ -27,17 +27,6 @@ body{
   border:1px solid rgba(255,255,255,0.2);
 }
 
-/* 頂部裝飾條 */
-/* 頂部裝飾圖片 */
-.card-img{
-  width:100%;
-  height:120px;
-  object-fit:cover;
-  border-radius:14px;
-  margin-bottom:10px;
-  display:block;
-}
-
 .card::before{
   content:"";
   display:block;
@@ -47,9 +36,7 @@ body{
   margin-bottom:12px;
 }
 
-h2{font-size:20px;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:#333;}
-h2::before{content:"📚";font-size:26px;}
-h2::after{content:"⚡";font-size:22px;}
+h2{font-size:20px;margin:0 0 10px;color:#333;}
 
 .bar{
   display:grid;
@@ -134,9 +121,9 @@ button:hover{background:#ddd;}
 
 <div class="card">
 
-<img class="card-img" src="tw-11134207-7qul4-ljn1yae6juti57.jpg" alt="TSMC" onerror="this.style.display='none'">
+<div id="imgArea" style="width:100%;height:130px;border-radius:14px;margin-bottom:10px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:48px;"></div>
 
-<h2>TSMC Vocabulary 288 FIXED</h2>
+<h2>📚 TSMC Vocabulary 288 ⚡</h2>
 
 <div class="bar">
   <button onclick="toggleMode()" id="modeBtn">🔄 英文 → 中文</button>
@@ -525,6 +512,16 @@ function updateStats(){
 }
 
 /* =========================
+   隨機顯示圖片（01.png ~ 40.png）
+========================= */
+function showImage(){
+  let n = Math.floor(Math.random()*40)+1;
+  let num = n.toString().padStart(2,"0");
+  let img = document.getElementById("imgArea");
+  img.innerHTML = `<img src="${num}.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='🖼'">`;
+}
+
+/* =========================
    建立隨機出題順序（Fisher-Yates）
 ========================= */
 function buildShuffle(){
@@ -549,6 +546,8 @@ function next(){
 
   cur = vocab[shuffle[shuffleIdx]];
   shuffleIdx++;
+
+  showImage();  // 每題換一張隨機圖片
 
   let q = mode==="en2zh"?cur[0]:cur[1];
   ans = mode==="en2zh"?cur[1]:cur[0];
