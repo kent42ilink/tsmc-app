@@ -126,6 +126,7 @@ button:hover{background:#ddd;}
 <h2>📚 TSMC Vocabulary 288 ⚡</h2>
 
 <div class="bar">
+  <button onclick="toggleMode()" id="modeBtn">🇬🇧 英→中</button>
   <button onclick="next()">⏭ 下一題</button>
   <button onclick="openDict()">📖 題庫</button>
   <button onclick="openWrong()">📕 錯題本</button>
@@ -475,8 +476,18 @@ if(vocab.length !== 288){
 }
 
 /* =========================
-   state
+   mode（三種：en2zh / zh2en / mix）
 ========================= */
+let mode="en2zh";
+let MODES=["en2zh","zh2en","mix"];
+let MODE_LABELS=["🇬🇧 英→中","🈶 中→英","🔀 混合"];
+
+function toggleMode(){
+  let i = MODES.indexOf(mode);
+  i = (i+1) % MODES.length;
+  mode = MODES[i];
+  document.getElementById("modeBtn").innerText = MODE_LABELS[i];
+}
 let cur=null;
 let ans="";
 let correctCount=0;
@@ -547,8 +558,8 @@ function next(){
 
   showImage();  // 每題換一張隨機圖片
 
-  // 隨機決定方向：英文→中文 或 中文→英文
-  let en2zh = Math.random() < 0.5;
+  // 根據 mode 決定方向
+  let en2zh = mode==="en2zh" ? true : mode==="zh2en" ? false : Math.random()<0.5;
 
   let q = en2zh ? cur[0] : cur[1];
   ans = en2zh ? cur[1] : cur[0];
@@ -559,8 +570,8 @@ function next(){
     :"🈶 "+q+" → 英文？";
 
   // 選項混合中英文
-  let enWords = vocab.map(x=>x[0]); // 全部英文
-  let zhWords = vocab.map(x=>x[1]); // 全部中文
+  let enWords = vocab.map(x=>x[0]);
+  let zhWords = vocab.map(x=>x[1]);
   let opt=[ans];
 
   let sameLang = en2zh ? zhWords : enWords;
