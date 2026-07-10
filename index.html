@@ -7,10 +7,13 @@
 <style>
 body{
   font-family:Arial;
-  background:#f4f6f8;
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
   padding:10px;
   margin:0;
   font-size:18px;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
 }
 
 .card{
@@ -18,12 +21,25 @@ body{
   max-width:520px;
   margin:auto;
   background:#fff;
-  padding:16px;
-  border-radius:14px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.1);
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.2);
 }
 
-h2{font-size:20px;margin:0 0 10px;}
+/* 頂部裝飾條 */
+.card::before{
+  content:"";
+  display:block;
+  height:6px;
+  background:linear-gradient(90deg,#667eea,#764ba2,#f093fb);
+  border-radius:10px;
+  margin-bottom:12px;
+}
+
+h2{font-size:20px;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:#333;}
+h2::before{content:"📚";font-size:26px;}
+h2::after{content:"⚡";font-size:22px;}
 
 .bar{
   display:grid;
@@ -111,17 +127,17 @@ button:hover{background:#ddd;}
 <h2>TSMC Vocabulary 288 FIXED</h2>
 
 <div class="bar">
-  <button onclick="toggleMode()" id="modeBtn">英文 → 中文</button>
-  <button onclick="next()">下一題</button>
-  <button onclick="openDict()">題庫</button>
-  <button onclick="openWrong()">錯題本</button>
+  <button onclick="toggleMode()" id="modeBtn">🔄 英文 → 中文</button>
+  <button onclick="next()">⏭ 下一題</button>
+  <button onclick="openDict()">📖 題庫</button>
+  <button onclick="openWrong()">📕 錯題本</button>
 </div>
 
 <div id="q"></div>
 <div id="stats" style="font-size:14px;color:#555;margin:8px 0;"></div>
 <div id="opt"></div>
 <div id="status"></div>
-<button onclick="next()" style="margin-top:12px;width:100%;background:#2196f3;color:#fff;font-weight:bold;">下一題 ➜</button>
+<button onclick="next()" style="margin-top:12px;width:100%;background:#2196f3;color:#fff;font-weight:bold;">⏭ 下一題 ➜</button>
 
 <div id="debug" style="font-size:12px;color:#888;"></div>
 
