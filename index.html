@@ -557,12 +557,13 @@ function next(){
     ?"英文："+q+" → 中文？"
     :"中文："+q+" → 英文？";
 
+  // 中英文混雜選項：正確答案在對應語言，干擾選項隨機取中/英文
   let opt=[ans];
+  let allWords = vocab.flat(); // 所有中英文詞彙混合
 
   while(opt.length<4){
-    let r=vocab[Math.floor(Math.random()*vocab.length)];
-    let o = mode==="en2zh"?r[1]:r[0];
-    if(!opt.includes(o)) opt.push(o);
+    let w = allWords[Math.floor(Math.random()*allWords.length)];
+    if(!opt.includes(w)) opt.push(w);
   }
 
   opt.sort(()=>Math.random()-0.5);
