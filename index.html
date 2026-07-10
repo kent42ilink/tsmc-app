@@ -118,8 +118,10 @@ button:hover{background:#ddd;}
 </div>
 
 <div id="q"></div>
+<div id="stats" style="font-size:14px;color:#555;margin:8px 0;"></div>
 <div id="opt"></div>
 <div id="status"></div>
+<button onclick="next()" style="margin-top:12px;width:100%;background:#2196f3;color:#fff;font-weight:bold;">下一題 ➜</button>
 
 <div id="debug" style="font-size:12px;color:#888;"></div>
 
@@ -136,7 +138,10 @@ button:hover{background:#ddd;}
 <!-- 錯題 -->
 <div class="modal" id="wrong" onclick="closeWrong()">
   <div class="box" onclick="event.stopPropagation()">
-    <b>錯題本</b>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <b>錯題本</b>
+      <button onclick="clearWrong()" style="background:#e74c3c;color:#fff;font-size:13px;padding:6px 12px;">🗑 清除全部</button>
+    </div>
     <div id="wrongList"></div>
   </div>
 </div>
@@ -456,11 +461,38 @@ if(vocab.length !== 288){
 }
 
 /* =========================
-   state
+   state（計數 + 模式）
 ========================= */
 let mode="en2zh";
 let cur=null;
 let ans="";
+let correctCount=0;
+let wrongCount=0;
+let totalAsked=0;
+
+/* =========================
+   初始化：從 localStorage 讀取統計
+========================= */
+function loadStats(){
+  let s = JSON.parse(localStorage.getItem("stats")||'{"correct":0,"wrong":0,"total":0}');
+  correctCount=s.correct;
+  wrongCount=s.wrong;
+  totalAsked=s.total;
+}
+function saveStats(){
+  localStorage.setItem("stats",JSON.stringify({correct:correctCount,wrong:wrongCount,total:totalAsked}));
+}
+loadStats();
+
+/* =========================
+   顯示統計
+========================= */
+function updateStats(){
+  let remaining = vocab.length - totalAsked;
+  if(remaining<0) remaining=0;
+  document.getElementById("stats").innerHTML =
+    "📊 總題數："+vocab.length+"　✅ 對："+correctCount+"　❌ 錯："+wrongCount+"　⏳ 剩下："+remaining;
+}
 
 /* =========================
    題目
@@ -491,10 +523,13 @@ function next(){
     opt.map(o=>`
       <button class="opt" onclick="check(this,'${o}')">${o}</button>
     `).join("");
+
+  document.getElementById("status").innerText="";
+  updateStats();
 }
 
 /* =========================
-   ✔ 修復：顏色 + 判斷
+   ✔ 修復：顏色 + 判斷 + 統計
 ========================= */
 function check(btn,o){
 
@@ -508,11 +543,18 @@ function check(btn,o){
   if(o === ans){
     btn.classList.add("correct");
     document.getElementById("status").innerText="✔ 正確";
+    correctCount++;
+    totalAsked++;
   }else{
     btn.classList.add("wrong");
     document.getElementById("status").innerText="✘ 錯誤：" + ans;
+    wrongCount++;
+    totalAsked++;
     saveWrong(cur[0],cur[1]);
   }
+
+  saveStats();
+  updateStats();
 }
 
 /* =========================
@@ -538,23 +580,45 @@ function closeDict(){
 }
 
 /* =========================
-   錯題
+   錯題（修復：不重複存入 + 清除按鈕）
 ========================= */
+
+// 用 Set 存 key，避免同一題重複記錄
+function wrongKey(a,b){
+  return a+"|||"+b;
+}
+
 function saveWrong(a,b){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-  d.push({a,b});
-  localStorage.setItem("wrong",JSON.stringify(d));
+  let key = wrongKey(a,b);
+  // 檢查是否已經存在
+  let exists = d.some(x => wrongKey(x.a,x.b) === key);
+  if(!exists){
+    d.push({a,b});
+    localStorage.setItem("wrong",JSON.stringify(d));
+  }
 }
 
 function openWrong(){
   let d = JSON.parse(localStorage.getItem("wrong")||"[]");
-  document.getElementById("wrongList").innerHTML =
-    d.map(x=>x.a+" → "+x.b).join("<br>");
+  if(d.length===0){
+    document.getElementById("wrongList").innerHTML = "<span style='color:#888;'>暫無錯題</span>";
+  }else{
+    document.getElementById("wrongList").innerHTML =
+      d.map((x,i)=>(i+1)+". "+x.a+" → "+x.b).join("<br>");
+  }
   document.getElementById("wrong").style.display="flex";
 }
 
 function closeWrong(){
   document.getElementById("wrong").style.display="none";
+}
+
+function clearWrong(){
+  if(confirm("確定清除全部錯題紀錄？")){
+    localStorage.setItem("wrong","[]");
+    openWrong(); // 刷新顯示
+  }
 }
 
 </script>
