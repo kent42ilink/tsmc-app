@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ㄗ<!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
@@ -569,20 +569,12 @@ function next(){
     ?"🔤 "+q+" → 中文？"
     :"🈶 "+q+" → 英文？";
 
-  // 選項混合中英文
-  let enWords = vocab.map(x=>x[0]);
-  let zhWords = vocab.map(x=>x[1]);
+  // 選項全部使用與答案相同的語言（全中文 或 全英文）
+  let sameLang = en2zh ? vocab.map(x=>x[1]) : vocab.map(x=>x[0]);
   let opt=[ans];
 
-  let sameLang = en2zh ? zhWords : enWords;
-  let diffLang = en2zh ? enWords : zhWords;
-
-  while(opt.length < 3){
-    let w = sameLang[Math.floor(Math.random()*sameLang.length)];
-    if(!opt.includes(w)) opt.push(w);
-  }
   while(opt.length < 4){
-    let w = diffLang[Math.floor(Math.random()*diffLang.length)];
+    let w = sameLang[Math.floor(Math.random()*sameLang.length)];
     if(!opt.includes(w)) opt.push(w);
   }
 
