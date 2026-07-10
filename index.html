@@ -469,6 +469,8 @@ let ans="";
 let correctCount=0;
 let wrongCount=0;
 let totalAsked=0;
+let shuffle=[];      // 隨機出題順序
+let shuffleIdx=0;    // 目前出到第幾題
 
 /* =========================
    初始化：從 localStorage 讀取統計
@@ -488,18 +490,37 @@ loadStats();
    顯示統計
 ========================= */
 function updateStats(){
-  let remaining = vocab.length - totalAsked;
+  let remaining = vocab.length - shuffleIdx;
   if(remaining<0) remaining=0;
   document.getElementById("stats").innerHTML =
     "📊 總題數："+vocab.length+"　✅ 對："+correctCount+"　❌ 錯："+wrongCount+"　⏳ 剩下："+remaining;
 }
 
 /* =========================
-   題目
+   建立隨機出題順序（Fisher-Yates）
+========================= */
+function buildShuffle(){
+  shuffle = vocab.map((_,i)=>i);      // [0,1,2,...,287]
+  for(let i=shuffle.length-1;i>0;i--){
+    let j = Math.floor(Math.random()*(i+1));
+    [shuffle[i],shuffle[j]] = [shuffle[j],shuffle[i]];
+  }
+  shuffleIdx = 0;
+}
+buildShuffle();
+
+/* =========================
+   題目（不重複，全部出完才重來）
 ========================= */
 function next(){
 
-  cur = vocab[Math.floor(Math.random()*vocab.length)];
+  // 如果出完一輪，重新洗牌
+  if(shuffleIdx >= vocab.length){
+    buildShuffle();
+  }
+
+  cur = vocab[shuffle[shuffleIdx]];
+  shuffleIdx++;
 
   let q = mode==="en2zh"?cur[0]:cur[1];
   ans = mode==="en2zh"?cur[1]:cur[0];
