@@ -126,7 +126,6 @@ button:hover{background:#ddd;}
 <h2>📚 TSMC Vocabulary 288 ⚡</h2>
 
 <div class="bar">
-  <button onclick="toggleMode()" id="modeBtn">🔄 英文 → 中文</button>
   <button onclick="next()">⏭ 下一題</button>
   <button onclick="openDict()">📖 題庫</button>
   <button onclick="openWrong()">📕 錯題本</button>
@@ -476,9 +475,8 @@ if(vocab.length !== 288){
 }
 
 /* =========================
-   state（計數 + 模式）
+   state
 ========================= */
-let mode="en2zh";
 let cur=null;
 let ans="";
 let correctCount=0;
@@ -549,29 +547,29 @@ function next(){
 
   showImage();  // 每題換一張隨機圖片
 
-  let q = mode==="en2zh"?cur[0]:cur[1];
-  ans = mode==="en2zh"?cur[1]:cur[0];
+  // 隨機決定方向：英文→中文 或 中文→英文
+  let en2zh = Math.random() < 0.5;
+
+  let q = en2zh ? cur[0] : cur[1];
+  ans = en2zh ? cur[1] : cur[0];
 
   document.getElementById("q").innerHTML =
-    mode==="en2zh"
-    ?"英文："+q+" → 中文？"
-    :"中文："+q+" → 英文？";
+    en2zh
+    ?"🔤 "+q+" → 中文？"
+    :"🈶 "+q+" → 英文？";
 
-  // 中英文混雜選項：強制混合中英文
+  // 選項混合中英文
   let enWords = vocab.map(x=>x[0]); // 全部英文
   let zhWords = vocab.map(x=>x[1]); // 全部中文
   let opt=[ans];
 
-  // 先補一個同語言、一個不同語言的干擾項
-  let sameLang = mode==="en2zh" ? zhWords : enWords;
-  let diffLang = mode==="en2zh" ? enWords : zhWords;
+  let sameLang = en2zh ? zhWords : enWords;
+  let diffLang = en2zh ? enWords : zhWords;
 
-  // 找同語言的干擾項
   while(opt.length < 3){
     let w = sameLang[Math.floor(Math.random()*sameLang.length)];
     if(!opt.includes(w)) opt.push(w);
   }
-  // 找不同語言的干擾項（強制混雜）
   while(opt.length < 4){
     let w = diffLang[Math.floor(Math.random()*diffLang.length)];
     if(!opt.includes(w)) opt.push(w);
@@ -615,15 +613,6 @@ function check(btn,o){
 
   saveStats();
   updateStats();
-}
-
-/* =========================
-   mode
-========================= */
-function toggleMode(){
-  mode = mode==="en2zh"?"zh2en":"en2zh";
-  document.getElementById("modeBtn").innerText =
-    mode==="en2zh"?"英文 → 中文":"中文 → 英文";
 }
 
 /* =========================
